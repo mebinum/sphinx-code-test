@@ -13,8 +13,17 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      borderRadius: {
+        "large": "2rem" 
+      },
+      gridTemplateColumns: {
+        // Simple 16 column grid
+        '24': 'repeat(24, minmax(0, 1fr))',
+      }
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms')
+  ],
 };
 export default config;
