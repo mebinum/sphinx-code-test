@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import clsx from "clsx";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +17,12 @@ export default function RootLayout({
 }>) {
   return (
     <html className="h-full" lang="en">
-      <body suppressHydrationWarning={true} className={inter.className}>{children}</body>
+      <body
+        suppressHydrationWarning={true}
+        className={clsx(inter.className, "min-h-screen")}
+      >
+        {children}
+      </body>
     </html>
   );
 }

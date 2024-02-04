@@ -2,5 +2,11 @@
     "cSpell.words": [
         "clsx",
         "headlessui"
-    ]
+    ],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    },
+    "eslint.validate": ["javascript", "typescript"]
+ 
 }

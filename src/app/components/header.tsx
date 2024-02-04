@@ -1,5 +1,4 @@
-import React from 'react'
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
+import React from "react";
 
 function Header() {
   return (
@@ -12,7 +11,7 @@ function Header() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Header
+export default Header;
