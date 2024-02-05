@@ -3,6 +3,7 @@ export type AssayPlate = {
   Id?: string;
   name: string;
   type: string;
+  wells: WellData;
 };
 
 export type WellContent = "reagent" | "antibody" | "concentration";

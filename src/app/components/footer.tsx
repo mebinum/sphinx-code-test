@@ -7,7 +7,7 @@ import YoutubeIcon from "../../../public/youtube.svg";
 const navigation = [
   {
     name: "X",
-    href: "https://twitter.com/mebinum",
+    href: "https://twitter.com/mikeebinum",
     icon: TwitterIcon,
   },
   {
@@ -17,7 +17,7 @@ const navigation = [
   },
   {
     name: "YouTube",
-    href: "https://youtube.com/oyemike",
+    href: "https://youtube.com/mikeebinum",
     icon: YoutubeIcon,
   },
 ];

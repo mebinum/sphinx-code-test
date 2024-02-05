@@ -1,68 +1,85 @@
-import React, { useState } from "react";
-import ModalComponent from "./modal";
+import React, { useState, Fragment } from "react";
+import CreatePlate from "./createPlate";
 import { AssayPlate, WellType } from "../models";
 import { PlusIcon } from "@heroicons/react/20/solid";
+import DeleteIcon from "../../../public/delete.svg";
 import short from "short-uuid";
+import { EmptyWells } from "./EmptyWells";
+import EditPlate from "./editPlate";
+import { Dialog, Transition } from "@headlessui/react";
 
 type TableType = {
   title: string;
   description: string;
 };
 
-function EmptyWells({ onClickAdd }: { onClickAdd: () => void }) {
-  return (
-    <div className=" w-full p-10 text-center">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth="1.5"
-        stroke="currentColor"
-        className="mx-auto h-12 w-12 text-gray-400"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"
-        />
-      </svg>
-      <h3 className="mt-2 text-sm font-semibold text-gray-900">No plates </h3>
-      <p className="mt-1 text-sm text-gray-500">
-        Get started by creating a new plate.
-      </p>
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={onClickAdd}
-          className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-        >
-          <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
-          New Plate
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function Table({ description, title }: TableType) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [currentPlate, setCurrentPlate] = useState<AssayPlate>();
+
   const [assayPlates, setAssayPlates] = useState<AssayPlate[]>([]);
   const translator = short();
+
   function createPlate({ plateId, plateName, plateType }: WellType) {
-    setAssayPlates([
-      ...assayPlates,
-      { Id: plateId, name: plateName, type: plateType },
-    ]);
-    closeModal();
+    const newPlate = {
+      Id: plateId,
+      name: plateName,
+      type: plateType,
+      wells: {},
+    };
+    setAssayPlates([...assayPlates, newPlate]);
+    console.log("send add to server with newplate", newPlate);
+    closeCreateModal();
   }
 
-  function openModal() {
-    setIsOpen(true);
+  function updatePlate(plate: AssayPlate) {
+    console.log("send update to server", plate);
+    setAssayPlates(
+      assayPlates.map((assayPlate) => {
+        if (assayPlate.Id === plate.Id) {
+          return plate;
+        }
+        return assayPlate;
+      }),
+    );
   }
 
-  function closeModal() {
-    setIsOpen(false);
-  }
+  const handleEditPlate = (plate: AssayPlate) => {
+    setCurrentPlate(plate);
+    setIsEditOpen(true);
+  };
+
+  const handleCancelDelete = () => {
+    setCurrentPlate(null);
+    setIsDeleteOpen(false);
+  };
+
+  const onClickDeletePlate = (plate: AssayPlate) => {
+    setCurrentPlate(plate);
+    setIsDeleteOpen(true);
+  };
+
+  const handleDeletePlate = () => {
+    console.log("send delete request to server", currentPlate);
+    setAssayPlates((plates) =>
+      plates.filter((toDelete) => toDelete.Id !== currentPlate?.Id),
+    );
+    setIsDeleteOpen(false);
+  };
+
+  const handleCreatePlate = () => {
+    setIsCreateOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateOpen(false);
+  };
+
+  const closeEditModal = () => {
+    setIsEditOpen(false);
+  };
 
   return (
     <>
@@ -78,7 +95,7 @@ function Table({ description, title }: TableType) {
             <button
               type="button"
               className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              onClick={openModal}
+              onClick={handleCreatePlate}
             >
               <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
               New Plate
@@ -122,7 +139,7 @@ function Table({ description, title }: TableType) {
                     {assayPlates && assayPlates.length === 0 ? (
                       <tr>
                         <td colSpan={4}>
-                          <EmptyWells onClickAdd={openModal} />
+                          <EmptyWells onClickAdd={handleCreatePlate} />
                         </td>
                       </tr>
                     ) : (
@@ -138,13 +155,22 @@ function Table({ description, title }: TableType) {
                             {plate.type}
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                            <a
-                              href="#"
+                            <button
+                              onClick={handleEditPlate.bind(this, plate)}
                               className="text-indigo-600 hover:text-indigo-900"
                             >
                               Edit
-                              <span className="sr-only">, {plate.name}</span>
-                            </a>
+                              <span className="sr-only">Edit {plate.name}</span>
+                            </button>
+                            <button
+                              onClick={onClickDeletePlate.bind(this, plate)}
+                              className="ml-2 mt-2 leading-6"
+                            >
+                              <DeleteIcon
+                                className="h-4 w-4 text-indigo float-right"
+                                aria-hidden="true"
+                              />
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -157,11 +183,92 @@ function Table({ description, title }: TableType) {
         </div>
       </div>
 
-      <ModalComponent
-        isModalOpen={isOpen}
+      <CreatePlate
+        isModalOpen={isCreateOpen}
         onSubmit={createPlate}
-        handleClose={closeModal}
+        handleClose={closeCreateModal}
       />
+
+      {isEditOpen && (
+        <EditPlate
+          isModalOpen={isEditOpen}
+          plate={currentPlate}
+          onPlateChanged={updatePlate}
+          handleClose={closeEditModal}
+        />
+      )}
+
+      {isDeleteOpen && (
+        <Transition.Root show={isDeleteOpen} as={Fragment}>
+          <Dialog
+            as="div"
+            className="fixed z-10 inset-0 overflow-y-auto"
+            onClose={handleCancelDelete}
+          >
+            <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0"
+                enterTo="opacity-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+              >
+                <Dialog.Overlay className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+              </Transition.Child>
+
+              <span
+                className="hidden sm:inline-block sm:align-middle sm:h-screen"
+                aria-hidden="true"
+              >
+                &#8203;
+              </span>
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                enterTo="opacity-100 translate-y-0 sm:scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              >
+                <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                  <div>
+                    <h3
+                      className="text-lg leading-6 font-medium text-gray-900"
+                      id="modal-headline"
+                    >
+                      Really Delete Plate #{currentPlate?.name}?
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-5 sm:mt-6">
+                    <button
+                      type="button"
+                      onClick={handleCancelDelete}
+                      className="mr-4 text-sm font-semibold leading-6 rounded-md text-gray-900 border border-gray-400 px-3 py-2 hover:bg-grey-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grey-500"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeletePlate}
+                      className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </Transition.Child>
+            </div>
+          </Dialog>
+        </Transition.Root>
+      )}
     </>
   );
 }

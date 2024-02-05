@@ -28,7 +28,7 @@ export function generateName() {
 // Generate random reagent name
 export const generateReagent = () => {
   const prefix = "R";
-  const num = Math.floor(Math.random() * 1000);
+  const num = Math.floor(Math.random() * 900) + 100;
   return `${prefix}${num}`;
 };
 

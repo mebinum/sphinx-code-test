@@ -11,7 +11,7 @@ type ModalType = {
   handleClose: () => void;
 };
 
-function ModalComponent({ isModalOpen, onSubmit, handleClose }: ModalType) {
+function CreatePlate({ isModalOpen, onSubmit, handleClose }: ModalType) {
   let [defaultName, setDefaultName] = useState(generateName());
 
   const methods = useForm<WellType>({
@@ -161,7 +161,7 @@ function ModalComponent({ isModalOpen, onSubmit, handleClose }: ModalType) {
   );
 }
 
-export default ModalComponent;
+export default CreatePlate;
 export type WellInfoType = {
   wellIndex: number;
   well: Well;
