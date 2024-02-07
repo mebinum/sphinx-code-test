@@ -2,7 +2,13 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies the development server:
+
+```bash
+    npm i 
+```
+
+Then run the development server:
 
 ```bash
 npm run dev
@@ -14,20 +20,119 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Web Application:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Frontend Interface**:
+   - The UI allows users to:
+     - Create a new plate.
+     - Add information to an empty well.
+     - View information in an existing well.
+     - Edit information in an existing well.
+     - Delete a plate.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+2. **Backend API**:
+   - Implement API endpoints for:
+     - `POST /api/plates`: Create a new plate.
+     - `PATCH /api/plates/:plateId`: Edit information in an existing plate.
+     - `DELETE /api/plates/:plateId`: Delete a plate.
 
-## Learn More
+### REST API Documentation:
 
-To learn more about Next.js, take a look at the following resources:
+Below the REST API endpoints:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### POST /api/plates
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Creates a new plate with the provided information.
+
+**Request Body:**
+```json
+{
+  "name": "Plate Name",
+  "dimension": "96",
+  "wells": {
+    "28": {
+      "index": 28,
+      "type": "reagent",
+      "value": "R282"
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Plate created successfully",
+  "plate": {
+    "id": "e3e904ac-f540-4cc3-bcab-814d123ed45b",
+    "name": "Plate Name",
+    "dimension": "96",
+    "wells": {
+      "28": {
+        "index": 28,
+        "type": "reagent",
+        "value": "R282"
+      }
+    }
+  }
+}
+```
+
+#### PATCH /api/plates/:plateId
+
+Edits information in an existing well of the specified plate.
+
+**Request Parameters:**
+- `plateId` (string): The ID of the plate.
+
+**Request Body:**
+```json
+{
+  "name": "Plate Name",
+  "dimension": "96",
+  "wells": {
+      "28": {
+        "index": 28,
+        "type": "antibody",
+        "value": "A123"
+      }
+    }
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Well information updated successfully",
+  "plate": {
+    "id": "e3e904ac-f540-4cc3-bcab-814d123ed45b",
+    "name": "Plate Name",
+    "dimension": "96",
+    "wells": {
+      "28": {
+        "index": 28,
+        "type": "antibody",
+        "value": "A123"
+      }
+    }
+  }
+}
+```
+
+#### DELETE /api/plates/:plateId
+
+Deletes the plate with the specified ID.
+
+**Request Parameters:**
+- `plateId` (string): The ID of the plate to delete.
+
+**Response:**
+```json
+{
+  "message": "Plate deleted successfully",
+  "plateId": "e3e904ac-f540-4cc3-bcab-814d123ed45b"
+}
+```
 
 ## Deploy on Vercel
 

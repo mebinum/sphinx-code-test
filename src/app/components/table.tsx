@@ -3,6 +3,7 @@ import CreatePlate from "./createPlate";
 import { AssayPlate, WellType } from "../models";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import DeleteIcon from "../../../public/delete.svg";
+import LoadingIcon from "../../../public/loading.svg";
 import short from "short-uuid";
 import { EmptyWells } from "./EmptyWells";
 import EditPlate from "./editPlate";
@@ -18,6 +19,7 @@ function Table({ description, title }: TableType) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPlate, setCurrentPlate] = useState<AssayPlate>();
 
   const [assayPlates, setAssayPlates] = useState<AssayPlate[]>([]);
@@ -26,12 +28,14 @@ function Table({ description, title }: TableType) {
 
   const WithTryCatch = (call: () => Promise<void>, finalCall: () => void) => {
     try {
+      setIsLoading(true);
       call();
     } catch (error: Error) {
       console.error("Error:", error);
       setError(error);
     } finally {
       finalCall();
+      setIsLoading(false);
     }
   };
 
@@ -206,7 +210,22 @@ function Table({ description, title }: TableType) {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="divide-y divide-gray-200 bg-white relative">
+                    {isLoading && (
+                      <div className="absolute flex w-full h-full items-center bg-slate-300/70 z-50">
+                        <button
+                          type="button"
+                          className="bg-white-500 mx-auto my-auto"
+                          disabled
+                        >
+                          <div role="status">
+                            <LoadingIcon className="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-indigo-600" />
+                            <span className="sr-only">Loading...</span>
+                          </div>
+                          Loading...
+                        </button>
+                      </div>
+                    )}
                     {assayPlates && assayPlates.length === 0 ? (
                       <tr>
                         <td colSpan={4}>
