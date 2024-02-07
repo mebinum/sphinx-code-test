@@ -74,7 +74,7 @@ export default function EditPlate({
 
                     <div className="my-8 w-[70vw]">
                       <WellPlate
-                        dimension={plate.type}
+                        dimension={plate.dimension}
                         wells={plate.wells}
                         onWellChanged={handleWellChanged}
                       />

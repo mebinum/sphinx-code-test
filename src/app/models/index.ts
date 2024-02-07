@@ -2,7 +2,7 @@ import { inspect } from "util";
 export type AssayPlate = {
   Id?: string;
   name: string;
-  type: string;
+  dimension: string;
   wells: WellData;
 };
 

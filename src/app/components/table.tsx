@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import CreatePlate from "./createPlate";
 import { AssayPlate, WellType } from "../models";
 import { PlusIcon } from "@heroicons/react/20/solid";
@@ -7,6 +7,7 @@ import short from "short-uuid";
 import { EmptyWells } from "./EmptyWells";
 import EditPlate from "./editPlate";
 import { Dialog, Transition } from "@headlessui/react";
+import ErrorModal from "./errorModal";
 
 type TableType = {
   title: string;
@@ -20,30 +21,82 @@ function Table({ description, title }: TableType) {
   const [currentPlate, setCurrentPlate] = useState<AssayPlate>();
 
   const [assayPlates, setAssayPlates] = useState<AssayPlate[]>([]);
+  const [error, setError] = useState<Error>();
   const translator = short();
 
-  function createPlate({ plateId, plateName, plateType }: WellType) {
-    const newPlate = {
-      Id: plateId,
-      name: plateName,
-      type: plateType,
-      wells: {},
+  const WithTryCatch = (call: () => Promise<void>, finalCall: () => void) => {
+    try {
+      call();
+    } catch (error: Error) {
+      console.error("Error:", error);
+      setError(error);
+    } finally {
+      finalCall();
+    }
+  };
+
+  useEffect(() => {
+    const fetchPlates = async () => {
+      const response = await fetch("/api/plates");
+      const data = await response.json();
+      const plates = data.plates as AssayPlate[];
+      console.log("Plates:", plates);
+      setAssayPlates(plates);
     };
-    setAssayPlates([...assayPlates, newPlate]);
-    console.log("send add to server with newplate", newPlate);
-    closeCreateModal();
+    WithTryCatch(fetchPlates, () => {});
+  }, []);
+
+  function createPlate({ plateName, plateType }: WellType) {
+    WithTryCatch(async () => {
+      const newPlate: Partial<AssayPlate> = {
+        name: plateName,
+        dimension: plateType,
+      };
+      const response = await fetch("/api/plates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newPlate),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      console.log("Plate created:", data);
+      const plate = data.plate as AssayPlate;
+      setAssayPlates([...assayPlates, plate]);
+    }, closeCreateModal);
   }
 
   function updatePlate(plate: AssayPlate) {
-    console.log("send update to server", plate);
-    setAssayPlates(
-      assayPlates.map((assayPlate) => {
-        if (assayPlate.Id === plate.Id) {
-          return plate;
-        }
-        return assayPlate;
-      }),
-    );
+    WithTryCatch(async () => {
+      const response = await fetch(`/api/plates/${plate.Id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(plate),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      console.log("Plate updated:", data);
+      const updatedPlate = data.plate as AssayPlate;
+      setAssayPlates(
+        assayPlates.map((assayPlate) => {
+          if (assayPlate.Id === plate.Id) {
+            return updatedPlate;
+          }
+          return assayPlate;
+        }),
+      );
+    }, closeEditModal);
   }
 
   const handleEditPlate = (plate: AssayPlate) => {
@@ -62,11 +115,21 @@ function Table({ description, title }: TableType) {
   };
 
   const handleDeletePlate = () => {
-    console.log("send delete request to server", currentPlate);
-    setAssayPlates((plates) =>
-      plates.filter((toDelete) => toDelete.Id !== currentPlate?.Id),
-    );
-    setIsDeleteOpen(false);
+    WithTryCatch(async () => {
+      console.log("send delete request to server", currentPlate);
+      const response = await fetch(`/api/plates/${currentPlate?.Id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      console.log("Plate deleted:", currentPlate?.Id);
+      setAssayPlates((plates) =>
+        plates.filter((toDelete) => toDelete.Id !== currentPlate?.Id),
+      );
+    }, closeDeleteModal);
   };
 
   const handleCreatePlate = () => {
@@ -79,6 +142,14 @@ function Table({ description, title }: TableType) {
 
   const closeEditModal = () => {
     setIsEditOpen(false);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteOpen(false);
+  };
+
+  const closeErrorModal = () => {
+    setError(undefined);
   };
 
   return (
@@ -125,7 +196,7 @@ function Table({ description, title }: TableType) {
                         scope="col"
                         className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                       >
-                        Type
+                        Dimension
                       </th>
                       <th
                         scope="col"
@@ -152,7 +223,7 @@ function Table({ description, title }: TableType) {
                             {plate.name}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
-                            {plate.type}
+                            {plate.dimension}
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                             <button
@@ -189,7 +260,7 @@ function Table({ description, title }: TableType) {
         handleClose={closeCreateModal}
       />
 
-      {isEditOpen && (
+      {isEditOpen && currentPlate && (
         <EditPlate
           isModalOpen={isEditOpen}
           plate={currentPlate}
@@ -268,6 +339,14 @@ function Table({ description, title }: TableType) {
             </div>
           </Dialog>
         </Transition.Root>
+      )}
+
+      {error && (
+        <ErrorModal
+          isOpen={error !== undefined}
+          onClose={closeErrorModal}
+          errorMessage={error.message}
+        />
       )}
     </>
   );
